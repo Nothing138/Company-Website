@@ -5,9 +5,10 @@ import StatCard from '../components/layout/StatCard';
 import ServiceCard from '../components/layout/ServiceCard';
 import ProjectCard from '../components/layout/ProjectCard';
 import '../styles/Home.css';
+import { useTheme } from '../context/ThemeContext';
 
 export default function App() {
-  const [darkMode, setDarkMode] = useState(false);
+  const { darkMode } = useTheme();
   const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
@@ -16,25 +17,6 @@ export default function App() {
     };
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
-
-  useEffect(() => {
-    if (darkMode) {
-      document.body.classList.add('dark-mode');
-      localStorage.setItem('theme', 'dark');
-    } else {
-      document.body.classList.remove('dark-mode');
-      localStorage.setItem('theme', 'light');
-    }
-  }, [darkMode]);
-
-  // Initialize theme from localStorage
-  useEffect(() => {
-    const savedTheme = localStorage.getItem('theme');
-    if (savedTheme === 'dark') {
-      setDarkMode(true);
-      document.body.classList.add('dark-mode');
-    }
   }, []);
 
   const servicesData = [
@@ -102,7 +84,7 @@ export default function App() {
 
   return (
     <div className={darkMode ? 'dark-mode' : ''}>
-      <Navbar darkMode={darkMode} setDarkMode={setDarkMode} scrolled={scrolled} />
+      <Navbar scrolled={scrolled} />
 
       {/* ====== HERO SECTION ====== */}
       <section className="hero">
@@ -298,6 +280,7 @@ export default function App() {
         </div>
       </section>
 
+      <Footer />
     </div>
   );
 }

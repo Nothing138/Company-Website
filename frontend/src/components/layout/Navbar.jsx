@@ -1,12 +1,30 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
+import { useLocation } from 'react-router-dom';
+import { useTheme } from '../../context/ThemeContext';
 import '../../styles/Navbar.css';
 
-const Navbar = ({ darkMode, setDarkMode, scrolled }) => {
+const Navbar = ({ scrolled }) => {
+  const { darkMode, toggleDarkMode } = useTheme();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const location = useLocation();
 
   const toggleMenu = () => {
     setMobileMenuOpen(!mobileMenuOpen);
   };
+
+  // Check if a link is active
+  const isActive = (path) => {
+    return location.pathname === path;
+  };
+
+  // Navigation links data
+  const navLinks = [
+    { path: '/', label: 'Home' },
+    { path: '/about', label: 'About Us' },
+    { path: '/services', label: 'Services' },
+    { path: '/projects', label: 'Projects' },
+    { path: '/contact', label: 'Contact' }
+  ];
 
   return (
     <nav className={`navbar ${scrolled ? 'scrolled' : ''}`}>
@@ -48,11 +66,16 @@ const Navbar = ({ darkMode, setDarkMode, scrolled }) => {
 
         {/* Menu */}
         <ul className={`navbar-menu ${mobileMenuOpen ? 'active' : ''}`}>
-          <li><a href="#" className="navbar-link active">Home</a></li>
-          <li><a href="#" className="navbar-link">About Us</a></li>
-          <li><a href="#" className="navbar-link">Services</a></li>
-          <li><a href="#" className="navbar-link">Projects</a></li>
-          <li><a href="#" className="navbar-link">Contact</a></li>
+          {navLinks.map((link) => (
+            <li key={link.path}>
+              <a 
+                href={link.path} 
+                className={`navbar-link ${isActive(link.path) ? 'active' : ''}`}
+              >
+                {link.label}
+              </a>
+            </li>
+          ))}
         </ul>
 
         {/* Actions */}
@@ -61,7 +84,7 @@ const Navbar = ({ darkMode, setDarkMode, scrolled }) => {
           <div className="lanyard-toggle">
             <button 
               className="lanyard-button"
-              onClick={() => setDarkMode(!darkMode)}
+              onClick={toggleDarkMode}
               aria-label="Toggle dark mode"
             >
               <div className="lanyard-card">
@@ -74,7 +97,7 @@ const Navbar = ({ darkMode, setDarkMode, scrolled }) => {
           </div>
 
           {/* CTA Button */}
-          <a href="#" className="btn btn-primary navbar-cta">Start a Project</a>
+          <a href="#contact" className="btn btn-primary navbar-cta">Start a Project</a>
 
           {/* Mobile Menu Toggle */}
           <button 
