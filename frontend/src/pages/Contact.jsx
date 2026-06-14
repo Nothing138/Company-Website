@@ -1,525 +1,457 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useTheme } from '../context/ThemeContext';
 import Navbar from '../components/layout/Navbar';
 import Footer from '../components/layout/Footer';
-import './Contact.css';
+import '../styles/contact.css';
 
-// Sub-components
-const ContactForm = ({ onSuccess }) => {
+const Contact = () => {
+  const navigate = useNavigate();
+  const { darkMode } = useTheme();
+
   const [formData, setFormData] = useState({
     name: '',
+    business: '',
     email: '',
     phone: '',
-    subject: '',
-    message: '',
+    country: '',
+    projectType: '',
     budget: '',
-    company: ''
+    timeline: '',
+    message: '',
+    consent: false,
   });
 
-  const [submitted, setSubmitted] = useState(false);
-  const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState({ type: '', text: '' });
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
-    setError('');
-  };
-
-  const validateForm = () => {
-    if (!formData.name.trim()) {
-      setError('Name is required');
-      return false;
-    }
-    if (!formData.email.trim()) {
-      setError('Email is required');
-      return false;
-    }
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      setError('Please enter a valid email');
-      return false;
-    }
-    if (!formData.message.trim()) {
-      setError('Message is required');
-      return false;
-    }
-    return true;
+  const handleInputChange = (e) => {
+    const { name, value, type, checked } = e.target;
+    setFormData({
+      ...formData,
+      [name]: type === 'checkbox' ? checked : value,
+    });
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError('');
+    setLoading(true);
+    setMessage({ type: '', text: '' });
 
-    if (!validateForm()) {
+    // Validation
+    if (!formData.name || !formData.email || !formData.projectType || !formData.budget || !formData.timeline || !formData.message) {
+      setMessage({ type: 'error', text: '❌ Please fill in all required fields.' });
+      setLoading(false);
       return;
     }
 
-    setLoading(true);
-
-    // Simulate API call
-    setTimeout(() => {
-      setSubmitted(true);
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(formData.email)) {
+      setMessage({ type: 'error', text: '❌ Please enter a valid email address.' });
       setLoading(false);
-      setFormData({
-        name: '',
-        email: '',
-        phone: '',
-        subject: '',
-        message: '',
-        budget: '',
-        company: ''
+      return;
+    }
+
+    if (!formData.consent) {
+      setMessage({ type: 'error', text: '❌ Please agree to be contacted.' });
+      setLoading(false);
+      return;
+    }
+
+    try {
+      const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+
+      const response = await fetch(`${API_URL}/api/contact`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
       });
 
-      // Hide success message after 5 seconds
-      setTimeout(() => {
-        setSubmitted(false);
-      }, 5000);
-    }, 1500);
+      const data = await response.json();
+
+      if (response.ok) {
+        setMessage({ type: 'success', text: '✅ Thank you! We\'ll respond within 24-48 hours.' });
+        setFormData({
+          name: '',
+          business: '',
+          email: '',
+          phone: '',
+          country: '',
+          projectType: '',
+          budget: '',
+          timeline: '',
+          message: '',
+          consent: false,
+        });
+        setTimeout(() => {
+          setMessage({ type: '', text: '' });
+        }, 5000);
+      } else {
+        setMessage({ type: 'error', text: data.message || '❌ Something went wrong. Please try again.' });
+      }
+    } catch (error) {
+      console.error('Error:', error);
+      setMessage({ type: 'error', text: '❌ Failed to submit form. Please try again later.' });
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
-    <form onSubmit={handleSubmit} className="contact-form">
-      {submitted && (
-        <div className="success-message">
-          ✓ Thank you! We'll respond within 24-48 hours.
-        </div>
-      )}
+    <div className="contact-page">
+      <Navbar />
 
-      {error && (
-        <div className="error-message">
-          ✗ {error}
-        </div>
-      )}
-
-      <div className="form-row">
-        <div className="form-group">
-          <label htmlFor="name">Full Name *</label>
-          <input
-            type="text"
-            id="name"
-            name="name"
-            value={formData.name}
-            onChange={handleChange}
-            placeholder="Your full name"
-            required
-          />
-        </div>
-
-        <div className="form-group">
-          <label htmlFor="email">Email Address *</label>
-          <input
-            type="email"
-            id="email"
-            name="email"
-            value={formData.email}
-            onChange={handleChange}
-            placeholder="your@email.com"
-            required
-          />
-        </div>
+      {/* ANIMATED BACKGROUND ELEMENTS */}
+      <div className="bg-animation-wrapper" aria-hidden="true">
+        <div className="bg-grid"></div>
+        <div className="bg-orb bg-orb-1"></div>
+        <div className="bg-orb bg-orb-2"></div>
+        <div className="bg-orb bg-orb-3"></div>
+        <div className="bg-orb bg-orb-4"></div>
       </div>
 
-      <div className="form-row">
-        <div className="form-group">
-          <label htmlFor="phone">Phone Number</label>
-          <input
-            type="tel"
-            id="phone"
-            name="phone"
-            value={formData.phone}
-            onChange={handleChange}
-            placeholder="+1 (555) 123-4567"
-          />
-        </div>
-
-        <div className="form-group">
-          <label htmlFor="company">Company Name</label>
-          <input
-            type="text"
-            id="company"
-            name="company"
-            value={formData.company}
-            onChange={handleChange}
-            placeholder="Your company"
-          />
-        </div>
-      </div>
-
-      <div className="form-group full">
-        <label htmlFor="subject">Project Subject *</label>
-        <input
-          type="text"
-          id="subject"
-          name="subject"
-          value={formData.subject}
-          onChange={handleChange}
-          placeholder="What's your project about?"
-          required
-        />
-      </div>
-
-      <div className="form-group full">
-        <label htmlFor="message">Project Details *</label>
-        <textarea
-          id="message"
-          name="message"
-          value={formData.message}
-          onChange={handleChange}
-          placeholder="Tell us more about your project, goals, timeline, and any specific requirements..."
-          rows="6"
-          required
-        ></textarea>
-      </div>
-
-      <div className="form-group full">
-        <label htmlFor="budget">Budget Range (Optional)</label>
-        <select
-          id="budget"
-          name="budget"
-          value={formData.budget}
-          onChange={handleChange}
-        >
-          <option value="">Select budget range</option>
-          <option value="under-5k">Under $5,000</option>
-          <option value="5k-10k">$5,000 - $10,000</option>
-          <option value="10k-25k">$10,000 - $25,000</option>
-          <option value="25k-50k">$25,000 - $50,000</option>
-          <option value="50k+">$50,000+</option>
-        </select>
-      </div>
-
-      <button 
-        type="submit" 
-        className="btn btn-primary btn-large"
-        disabled={loading}
-      >
-        {loading ? 'Sending...' : 'Send Project Details'}
-      </button>
-
-      <p className="form-note">
-        We'll get back to you within 24-48 hours with initial thoughts and next steps.
-      </p>
-    </form>
-  );
-};
-
-const InfoCard = ({ icon, title, content, link }) => (
-  <div className="info-card">
-    <div className="info-icon">{icon}</div>
-    <h3>{title}</h3>
-    <p>{content}</p>
-    {link && <a href={link} className="info-link">→ Contact</a>}
-  </div>
-);
-
-const FAQItem = ({ question, answer, isOpen, onToggle }) => (
-  <div className={`faq-item ${isOpen ? 'open' : ''}`}>
-    <button className="faq-header" onClick={onToggle}>
-      <span>{question}</span>
-      <span className="faq-icon">+</span>
-    </button>
-    {isOpen && (
-      <div className="faq-content">
-        {answer}
-      </div>
-    )}
-  </div>
-);
-
-export default function Contact() {
-  const [scrolled, setScrolled] = useState(false);
-  const [openFAQ, setOpenFAQ] = useState(null);
-  const { darkMode } = useTheme();
-
-  useEffect(() => {
-    const handleScroll = () => {
-      setScrolled(window.scrollY > 50);
-    };
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
-
-  const contactInfo = [
-    {
-      icon: '📧',
-      title: 'Email Us',
-      content: 'hello@cot360.com',
-      link: 'mailto:hello@cot360.com'
-    },
-    {
-      icon: '📱',
-      title: 'Call Us',
-      content: '+1 (555) 123-4567',
-      link: 'tel:+15551234567'
-    },
-    {
-      icon: '📍',
-      title: 'Visit Us',
-      content: '123 Tech Street, Silicon Valley, CA 94025',
-      link: null
-    },
-    {
-      icon: '⏰',
-      title: 'Business Hours',
-      content: 'Mon-Fri: 9 AM - 6 PM (PT)',
-      link: null
-    }
-  ];
-
-  const faqs = [
-    {
-      question: 'How long does a typical project take?',
-      answer: 'Project timelines vary based on scope and complexity. Simple websites take 2-4 weeks, while custom software can take 2-6 months. We\'ll provide a detailed timeline during the consultation phase.'
-    },
-    {
-      question: 'What is your development process?',
-      answer: 'We follow a proven 7-step process: Consultation → Planning → Design → Development → Testing → Launch → Support. You\'ll have regular updates throughout.'
-    },
-    {
-      question: 'Do you provide support after launch?',
-      answer: 'Yes! All our projects include ongoing support for bug fixes, performance optimization, and maintenance. We offer different support packages based on your needs.'
-    },
-    {
-      question: 'What technologies do you use?',
-      answer: 'We use modern, proven technologies including React, Node.js, Python, PostgreSQL, MongoDB, AWS, and more. We choose the best tech stack for each project\'s specific needs.'
-    },
-    {
-      question: 'Can you work with our existing systems?',
-      answer: 'Absolutely! We specialize in integrating with existing systems and platforms. We can work with legacy systems, modern frameworks, and everything in between.'
-    },
-    {
-      question: 'How do you handle project changes?',
-      answer: 'We embrace agile methodology. Changes can be made during development with transparent communication about impact on timeline and budget. We\'re flexible and collaborative.'
-    }
-  ];
-
-  const handleFAQToggle = (index) => {
-    setOpenFAQ(openFAQ === index ? null : index);
-  };
-
-  return (
-    <div className={darkMode ? 'dark-mode' : ''}>
-      <Navbar scrolled={scrolled} />
-
-      {/* ====== HERO SECTION ====== */}
-      <section className="hero contact-hero">
+      {/* HERO SECTION */}
+      <section className="contact-hero">
         <div className="container">
-          <div className="hero-content">
-            <div className="hero-text">
-              <h1>Let's Build Something Amazing Together</h1>
-              <p className="hero-subheadline">
-                Have an idea? Need help with your project? We're here to discuss your vision and turn it into reality. Let's talk!
-              </p>
+          <div className="hero-text">
+            <h1>Let's Talk About Your Next Technology Solution</h1>
+            <p className="hero-subheadline">
+              Whether you need software, automation, AI integration, a website, or technical support, COT360° is ready to understand your challenge and build the right solution for your business.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* CONTACT SECTION */}
+      <section className="contact-section">
+        <div className="container">
+          <div className="contact-row">
+            {/* LEFT SIDE - CONTACT INFO */}
+            <div className="contact-info">
+              <h2 style={{ marginBottom: '32px' }}>How to Reach Us</h2>
+
+              <div className="contact-info-card">
+                <div className="contact-info-title">💬 General Inquiry</div>
+                <div className="contact-info-content">
+                  Questions about our services, pricing, or anything else? We're here to help.
+                </div>
+              </div>
+
+              <div className="contact-info-card">
+                <div className="contact-info-title">🎯 Project Consultation</div>
+                <div className="contact-info-content">
+                  Have a specific project in mind? Let's discuss your requirements and create a plan.
+                </div>
+              </div>
+
+              <div className="contact-info-card">
+                <div className="contact-info-title">🔧 Technical Support</div>
+                <div className="contact-info-content">
+                  Need help with an existing project or system? We provide comprehensive support.
+                </div>
+              </div>
+
+              <div className="contact-info-card">
+                <div className="contact-info-title">🤝 Partnership</div>
+                <div className="contact-info-content">
+                  Interested in partnering with COT360°? Let's explore opportunities together.
+                </div>
+              </div>
+
+              <div className="contact-info-card">
+                <div className="contact-info-title">💼 Career / Collaboration</div>
+                <div className="contact-info-content">
+                  Join our team or collaborate on exciting projects with talented professionals.
+                </div>
+              </div>
+
+              <div className="response-time-box">
+                <h4>Response Time</h4>
+                <p>We usually respond within <strong>24 to 48 business hours</strong>.</p>
+                <h4 style={{ marginTop: '16px' }}>Privacy & Security</h4>
+                <p>
+                  Your information is secure. We only use your details to respond to your inquiry and discuss your project requirements.
+                </p>
+              </div>
+
+              <div className="consultation-cta">
+                <h4>Prefer a Direct Discussion?</h4>
+                <p>Schedule a free consultation call with our team to discuss your project in detail.</p>
+                <button
+                  className="btn btn-primary"
+                  style={{ width: '100%' }}
+                  onClick={() => navigate('/booking')}
+                >
+                  Book a Consultation
+                </button>
+              </div>
             </div>
 
-            {/* Hero Visual */}
-            <div className="contact-hero-visual">
-              <div className="hero-visual-card card-1">
-                <span>💡</span>
-                <span>Your Idea</span>
-              </div>
-              <div className="hero-visual-card card-2">
-                <span>🤝</span>
-                <span>Our Expertise</span>
-              </div>
-              <div className="hero-visual-card card-3">
-                <span>🚀</span>
-                <span>Real Results</span>
+            {/* RIGHT SIDE - CONTACT FORM */}
+            <div className="contact-form-wrapper">
+              <div className="contact-form-card" id="contact-form">
+                <h3 style={{ marginBottom: '8px' }}>Submit Your Project Inquiry</h3>
+                <p style={{ marginBottom: '32px', fontSize: '14px' }}>
+                  Share your project details and we'll get back to you with expert recommendations.
+                </p>
+
+                {message.text && (
+                  <div className={`form-message ${message.type}`}>
+                    {message.text}
+                  </div>
+                )}
+
+                <form onSubmit={handleSubmit} className="contact-form">
+                  {/* FULL NAME */}
+                  <div className="form-group">
+                    <label htmlFor="name">Full Name *</label>
+                    <input
+                      type="text"
+                      id="name"
+                      name="name"
+                      placeholder="Your full name"
+                      value={formData.name}
+                      onChange={handleInputChange}
+                      required
+                    />
+                  </div>
+
+                  {/* BUSINESS NAME */}
+                  <div className="form-group">
+                    <label htmlFor="business">Business / Organization Name</label>
+                    <input
+                      type="text"
+                      id="business"
+                      name="business"
+                      placeholder="Your business name"
+                      value={formData.business}
+                      onChange={handleInputChange}
+                    />
+                  </div>
+
+                  {/* EMAIL */}
+                  <div className="form-group">
+                    <label htmlFor="email">Email Address *</label>
+                    <input
+                      type="email"
+                      id="email"
+                      name="email"
+                      placeholder="your@email.com"
+                      value={formData.email}
+                      onChange={handleInputChange}
+                      required
+                    />
+                  </div>
+
+                  {/* PHONE */}
+                  <div className="form-group">
+                    <label htmlFor="phone">Phone Number</label>
+                    <input
+                      type="tel"
+                      id="phone"
+                      name="phone"
+                      placeholder="+1 (555) 000-0000"
+                      value={formData.phone}
+                      onChange={handleInputChange}
+                    />
+                  </div>
+
+                  {/* COUNTRY */}
+                  <div className="form-group">
+                    <label htmlFor="country">Country</label>
+                    <select
+                      id="country"
+                      name="country"
+                      value={formData.country}
+                      onChange={handleInputChange}
+                    >
+                      <option value="">Select your country</option>
+                      <option value="US">United States</option>
+                      <option value="CA">Canada</option>
+                      <option value="UK">United Kingdom</option>
+                      <option value="AU">Australia</option>
+                      <option value="BD">Bangladesh</option>
+                      <option value="IN">India</option>
+                      <option value="PK">Pakistan</option>
+                      <option value="Other">Other</option>
+                    </select>
+                  </div>
+
+                  {/* PROJECT TYPE */}
+                  <div className="form-group">
+                    <label htmlFor="projectType">Project Type *</label>
+                    <select
+                      id="projectType"
+                      name="projectType"
+                      value={formData.projectType}
+                      onChange={handleInputChange}
+                      required
+                    >
+                      <option value="">Select project type</option>
+                      <option value="website">Website Development</option>
+                      <option value="web-app">Web Application</option>
+                      <option value="software">Custom Software</option>
+                      <option value="ai">AI Solution</option>
+                      <option value="automation">Automation</option>
+                      <option value="ui-ux">UI/UX Design</option>
+                      <option value="support">Technical Support</option>
+                      <option value="consultation">Consultation</option>
+                      <option value="other">Other</option>
+                    </select>
+                  </div>
+
+                  {/* BUDGET */}
+                  <div className="form-group">
+                    <label htmlFor="budget">Project Budget *</label>
+                    <select
+                      id="budget"
+                      name="budget"
+                      value={formData.budget}
+                      onChange={handleInputChange}
+                      required
+                    >
+                      <option value="">Select estimated budget</option>
+                      <option value="under-500">Under $500</option>
+                      <option value="500-1000">$500 to $1,000</option>
+                      <option value="1000-3000">$1,000 to $3,000</option>
+                      <option value="3000-5000">$3,000 to $5,000</option>
+                      <option value="5000-plus">$5,000+</option>
+                      <option value="not-sure">Not sure yet</option>
+                    </select>
+                  </div>
+
+                  {/* TIMELINE */}
+                  <div className="form-group">
+                    <label htmlFor="timeline">Timeline *</label>
+                    <select
+                      id="timeline"
+                      name="timeline"
+                      value={formData.timeline}
+                      onChange={handleInputChange}
+                      required
+                    >
+                      <option value="">Select timeline</option>
+                      <option value="urgent">Urgent (ASAP)</option>
+                      <option value="1-month">Within 1 month</option>
+                      <option value="1-3-months">1 to 3 months</option>
+                      <option value="3-plus-months">3+ months</option>
+                      <option value="flexible">Flexible</option>
+                    </select>
+                  </div>
+
+                  {/* PROJECT DETAILS */}
+                  <div className="form-group">
+                    <label htmlFor="message">Project Details / Message *</label>
+                    <textarea
+                      id="message"
+                      name="message"
+                      placeholder="Describe your project, challenges, goals, and any specific requirements..."
+                      value={formData.message}
+                      onChange={handleInputChange}
+                      required
+                    ></textarea>
+                  </div>
+
+                  {/* CONSENT CHECKBOX */}
+                  <div className="form-checkbox">
+                    <input
+                      type="checkbox"
+                      id="consent"
+                      name="consent"
+                      checked={formData.consent}
+                      onChange={handleInputChange}
+                      required
+                    />
+                    <label htmlFor="consent">I agree to be contacted by COT360° regarding my inquiry</label>
+                  </div>
+
+                  {/* SUBMIT BUTTON */}
+                  <button
+                    type="submit"
+                    className="btn btn-primary"
+                    style={{ width: '100%' }}
+                    disabled={loading}
+                  >
+                    {loading ? 'Submitting...' : 'Submit Project Inquiry'}
+                  </button>
+                </form>
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* ====== CONTACT INFO ====== */}
-      <section className="contact-info-section">
-        <div className="container">
-          <div className="section-header">
-            <h2>Get In Touch</h2>
-            <p>Multiple ways to reach us - choose what works best for you</p>
-          </div>
-
-          <div className="info-grid">
-            {contactInfo.map((info, index) => (
-              <div key={index} className="info-wrapper" style={{ animationDelay: `${index * 0.1}s` }}>
-                <InfoCard {...info} />
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ====== CONTACT FORM SECTION ====== */}
-      <section className="form-section">
-        <div className="container">
-          <div className="form-grid">
-            {/* Form */}
-            <div className="form-column">
-              <div className="section-header">
-                <h2>Tell Us About Your Project</h2>
-                <p>Share your project details and we'll get back to you soon</p>
-              </div>
-              <ContactForm />
-            </div>
-
-            {/* Benefits */}
-            <div className="benefits-column">
-              <div className="benefits-card">
-                <h3>Why Choose COT360°?</h3>
-                
-                <div className="benefit-item">
-                  <span className="benefit-check">✓</span>
-                  <div>
-                    <h4>Expert Team</h4>
-                    <p>10+ years of experience building digital solutions</p>
-                  </div>
-                </div>
-
-                <div className="benefit-item">
-                  <span className="benefit-check">✓</span>
-                  <div>
-                    <h4>Custom Solutions</h4>
-                    <p>Tailored to your specific needs and goals</p>
-                  </div>
-                </div>
-
-                <div className="benefit-item">
-                  <span className="benefit-check">✓</span>
-                  <div>
-                    <h4>Fast Turnaround</h4>
-                    <p>Efficient process without compromising quality</p>
-                  </div>
-                </div>
-
-                <div className="benefit-item">
-                  <span className="benefit-check">✓</span>
-                  <div>
-                    <h4>Transparent Communication</h4>
-                    <p>Regular updates and complete visibility</p>
-                  </div>
-                </div>
-
-                <div className="benefit-item">
-                  <span className="benefit-check">✓</span>
-                  <div>
-                    <h4>Ongoing Support</h4>
-                    <p>Maintenance and support after launch</p>
-                  </div>
-                </div>
-
-                <div className="benefit-item">
-                  <span className="benefit-check">✓</span>
-                  <div>
-                    <h4>Best Practices</h4>
-                    <p>Latest technologies and proven methodologies</p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Response Time Card */}
-              <div className="response-time-card">
-                <div className="response-icon">⚡</div>
-                <h3>Quick Response Time</h3>
-                <p>We'll respond to your inquiry within <strong>24-48 hours</strong> with initial thoughts and next steps.</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ====== FAQ SECTION ====== */}
+      {/* FAQ SECTION */}
       <section className="faq-section">
         <div className="container">
           <div className="section-header">
             <h2>Frequently Asked Questions</h2>
-            <p>Find answers to common questions about our services</p>
+            <p>Common questions about our services and how we work</p>
           </div>
 
-          <div className="faq-container">
-            {faqs.map((faq, index) => (
-              <FAQItem
-                key={index}
-                question={faq.question}
-                answer={faq.answer}
-                isOpen={openFAQ === index}
-                onToggle={() => handleFAQToggle(index)}
-              />
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ====== PROCESS SECTION ====== */}
-      <section className="process-section">
-        <div className="container">
-          <div className="section-header">
-            <h2>Our Project Process</h2>
-            <p>How we turn your idea into a reality</p>
-          </div>
-
-          <div className="process-steps">
-            <div className="process-step">
-              <div className="step-number">01</div>
-              <div className="step-icon">💬</div>
-              <h3>Initial Consultation</h3>
-              <p>We learn about your project, goals, timeline, and budget</p>
-            </div>
-
-            <div className="process-step">
-              <div className="step-number">02</div>
-              <div className="step-icon">📋</div>
-              <h3>Proposal & Planning</h3>
-              <p>Detailed proposal, timeline, and development roadmap</p>
-            </div>
-
-            <div className="process-step">
-              <div className="step-number">03</div>
-              <div className="step-icon">🎨</div>
-              <h3>Design Phase</h3>
-              <p>Wireframes, mockups, and design approval</p>
-            </div>
-
-            <div className="process-step">
-              <div className="step-number">04</div>
-              <div className="step-icon">⚙️</div>
-              <h3>Development</h3>
-              <p>Building with regular updates and feedback</p>
-            </div>
-
-            <div className="process-step">
-              <div className="step-number">05</div>
-              <div className="step-icon">✅</div>
-              <h3>Testing & QA</h3>
-              <p>Rigorous testing and quality assurance</p>
-            </div>
-
-            <div className="process-step">
-              <div className="step-number">06</div>
-              <div className="step-icon">🚀</div>
-              <h3>Launch</h3>
-              <p>Smooth deployment and go-live support</p>
-            </div>
+          <div className="accordion-container">
+            <FAQAccordion
+              question="What type of projects does COT360° handle?"
+              answer="We handle a wide range of projects including custom software development, website development, web applications, mobile apps, AI solutions, business automation, UI/UX design, IT consultation, and digital transformation."
+            />
+            <FAQAccordion
+              question="Do you work with startups and small businesses?"
+              answer="Absolutely! We work with startups, small businesses, growing companies, and enterprises. We understand the unique challenges at every stage and tailor our solutions accordingly."
+            />
+            <FAQAccordion
+              question="Can you build custom software from scratch?"
+              answer="Yes, we specialize in building custom software solutions from scratch. We handle everything from requirements analysis, design, development, testing, deployment, and ongoing support."
+            />
+            <FAQAccordion
+              question="Can you provide long-term technical support?"
+              answer="Yes, we provide comprehensive long-term technical support. We offer maintenance plans, bug fixes, performance optimization, feature updates, and continuous improvement services."
+            />
+            <FAQAccordion
+              question="Do you offer consultation before development?"
+              answer="Absolutely! Consultation is a critical first step. We provide free initial consultations to understand your project, goals, challenges, and requirements."
+            />
           </div>
         </div>
       </section>
 
-      {/* ====== CTA SECTION ====== */}
-      <section className="contact-cta">
+      {/* CTA SECTION */}
+      <section className="cta-section">
         <div className="container">
-          <div className="cta-content">
-            <h2>Ready to Get Started?</h2>
-            <p>Don't wait - let's discuss your project today and start building something amazing together!</p>
-            <button className="btn btn-primary btn-large">
-              Start Your Project
-            </button>
-          </div>
+          <h2 style={{ marginBottom: '16px' }}>Ready to Start Your Project?</h2>
+          <p style={{ fontSize: '18px', marginBottom: '40px' }}>
+            Submit your inquiry above or schedule a free consultation to discuss your project with our expert team.
+          </p>
+          <a href="#contact-form" className="btn btn-primary">Submit Your Inquiry</a>
         </div>
       </section>
 
       <Footer />
     </div>
   );
-}
+};
+
+// FAQ Accordion Component
+const FAQAccordion = ({ question, answer }) => {
+  const [isOpen, setIsOpen] = useState(false);
+
+  return (
+    <div className={`accordion-item ${isOpen ? 'active' : ''}`}>
+      <button
+        className="accordion-header"
+        onClick={() => setIsOpen(!isOpen)}
+      >
+        <span>{question}</span>
+        <div className="accordion-toggle">▼</div>
+      </button>
+      {isOpen && (
+        <div className="accordion-body">
+          <div className="accordion-content">{answer}</div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default Contact;
