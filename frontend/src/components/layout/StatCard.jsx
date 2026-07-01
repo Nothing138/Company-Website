@@ -4,20 +4,20 @@ const StatCard = ({ number, label }) => {
   const [count, setCount] = useState(0);
 
   useEffect(() => {
-    let interval;
+    let timeout;
     if (count < number) {
-      interval = setTimeout(() => {
-        setCount(count + Math.ceil(number / 50));
+      timeout = setTimeout(() => {
+        setCount(Math.min(count + Math.ceil(number / 40), number));
       }, 30);
     }
-    return () => clearTimeout(interval);
+    return () => clearTimeout(timeout);
   }, [count, number]);
 
   return (
-    <div className="card stat-card">
-      <div className="stat-number">{Math.min(count, number)}</div>
-      <div className="stat-label">{label}</div>
-    </div>
+    <>
+      <div className="protocol-number">{count}</div>
+      <div className="protocol-label">{label}</div>
+    </>
   );
 };
 
