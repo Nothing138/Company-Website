@@ -5,7 +5,7 @@ const ServiceCard = ({ icon, title, description, includes, index = 0 }) => {
     <div className="frame asset-card">
       <div className="asset-card-top">
         <span className="asset-index">{String(index + 1).padStart(2, '0')}</span>
-        <div className="asset-icon">{icon}</div>
+        <div className="asset-icon glass">{icon}</div>
       </div>
       <h3>{title}</h3>
       <p>{description}</p>

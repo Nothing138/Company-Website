@@ -1,18 +1,18 @@
 import React from 'react';
 
-const ProjectCard = ({ icon, category, title, description, tags, index = 0 }) => {
+const ProjectCard = ({ icon, category, title, description, tags }) => {
   return (
-    <div className="frame asset-card">
-      <div className="asset-thumb">{icon}</div>
-      <span className="tech-label">{category}</span>
-      <h3 style={{ marginTop: 12 }}>{title}</h3>
+    <div className="card project-card">
+      <div className="project-thumbnail">{icon}</div>
+      <div className="project-category">{category}</div>
+      <h3>{title}</h3>
       <p>{description}</p>
-      <div className="asset-tags">
-        {tags.map((tag) => (
-          <span key={tag}>{tag}</span>
+      <div className="project-tags">
+        {tags.map((tag, i) => (
+          <span key={i}>{tag}</span>
         ))}
       </div>
-      <button className="btn btn-secondary">View Project</button>
+      <button className="btn btn-primary">View Project</button>
     </div>
   );
 };
